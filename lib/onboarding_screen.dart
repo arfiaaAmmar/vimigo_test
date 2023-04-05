@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vimigo_test/main.dart';
 
+// ignore: must_be_immutable
 class OnboardingScreen extends StatelessWidget {
   bool isFirstOpen;
 

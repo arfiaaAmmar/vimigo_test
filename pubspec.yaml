@@ -39,6 +39,7 @@ dependencies:
   timeago: ^3.4.0
   shared_preferences: ^2.1.0
   calendar_date_picker2: ^0.4.9
+  intl: ^0.18.0
 
 dev_dependencies:
   flutter_test:
