@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share/share.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:vimigo_test/attendance_record.dart';
 import 'package:vimigo_test/onboarding_screen.dart';
@@ -181,10 +182,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 AttendanceRecord record = _filteredRecords[index];
                 return ListTile(
                     title: Text(record.user.toString()),
-                    subtitle: _dateFormat == "time ago"
-                        ? Text(timeago.format(record.checkIn!))
-                        : Text(
-                            DateFormat(_dateFormat).format(record.checkIn!)));
+                    subtitle: Row(
+                      children: [
+                        _dateFormat == "time ago"
+                            ? Text(timeago.format(record.checkIn!))
+                            : Text(DateFormat(_dateFormat)
+                                .format(record.checkIn!)),
+                        TextButton(
+                          child: const Text("Share contact info"),
+                          onPressed: () {
+                            Share.share(
+                              record.phone.toString(),
+                              subject: record.phone.toString(),
+                            );
+                          },
+                        ),
+                      ],
+                    ));
               },
             ),
           ),
