@@ -1,14 +1,25 @@
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'dart:developer' as developer;
 
-void main() => runApp(const AttendanceApp());
+import 'package:vimigo_test/onboarding_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isFirstOpen = prefs.getBool("isFirstOpen") ?? true;
+
+  runApp(AttendanceApp(isFirstOpen: isFirstOpen));
+}
 
 class AttendanceApp extends StatelessWidget {
-  const AttendanceApp({super.key});
+  final bool isFirstOpen;
+
+  const AttendanceApp({super.key, required this.isFirstOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +28,11 @@ class AttendanceApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const AttendanceScreen(),
+      home: isFirstOpen
+          ? OnboardingScreen(
+              isFirstOpen: isFirstOpen,
+            )
+          : const AttendanceScreen(),
     );
   }
 }
@@ -35,6 +50,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   List<AttendanceRecord> _filteredRecords = [];
   DateTime _dateTime = DateTime.now();
   String _dateFormat = 'dd MMM yyyy, h:mm a';
+  bool _atEndOfList = false;
 
   //Get Attendance Record from given dataset in PDF
   //Dataset was converted to JSON format
@@ -50,12 +66,21 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   final TextEditingController _nameController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _fetchAttendanceData();
-    developer.log(_attendanceRecords.toString(), name: "My Log");
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        // user has reached the end of the list
+        setState(() {
+          _atEndOfList = true;
+        });
+      }
+    });
   }
 
   @override
@@ -136,8 +161,24 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               _filterRecords(value);
             },
           ),
+          AnimatedOpacity(
+            opacity: _atEndOfList ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              height: 50.0,
+              alignment: Alignment.center,
+              child: const Text(
+                "You have reached the end of the list",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: _filteredRecords.length,
               itemBuilder: (context, index) {
                 AttendanceRecord record = _filteredRecords[index];
