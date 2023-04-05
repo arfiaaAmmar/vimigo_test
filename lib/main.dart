@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
-
+import 'package:vimigo_test/attendance_record.dart';
 import 'package:vimigo_test/onboarding_screen.dart';
 
 void main() async {
@@ -28,11 +28,7 @@ class AttendanceApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: isFirstOpen
-          ? OnboardingScreen(
-              isFirstOpen: isFirstOpen,
-            )
-          : const AttendanceScreen(),
+      home: isFirstOpen ? const AttendanceScreen() : const OnboardingScreen(),
     );
   }
 }
@@ -50,6 +46,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   List<AttendanceRecord> _filteredRecords = [];
   DateTime _dateTime = DateTime.now();
   String _dateFormat = 'dd MMM yyyy, h:mm a';
+  String _sortList = "recent";
   bool _atEndOfList = false;
 
   //Get Attendance Record from given dataset in PDF
@@ -105,9 +102,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _sortRecordsByTime() {
-    setState(() {
-      _filteredRecords.sort((a, b) => b.checkIn!.compareTo(a.checkIn!));
-    });
+    _sortList == "recent"
+        ? _filteredRecords.sort((a, b) => b.checkIn!.compareTo(a.checkIn!))
+        : _filteredRecords.sort((a, b) => a.checkIn!.compareTo(b.checkIn!));
   }
 
   void _changeDateFormat() {
@@ -204,6 +201,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           ),
           FloatingActionButton(
             onPressed: () {
+              setState(() {
+                _sortList = _sortList == "recent" ? "oldest" : "recent";
+              });
               _sortRecordsByTime();
             },
             child: const Icon(Icons.sort),
@@ -249,27 +249,5 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         ],
       ),
     );
-  }
-}
-
-class AttendanceRecord {
-  String? user;
-  String? phone;
-  DateTime? checkIn;
-
-  AttendanceRecord({this.user, this.phone, this.checkIn});
-
-  AttendanceRecord.fromJson(Map<String, dynamic> json) {
-    user = json['user'];
-    phone = json['phone'];
-    checkIn = DateTime.tryParse(json['check-in']);
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['user'] = user;
-    data['phone'] = phone;
-    data['check-in'] = checkIn;
-    return data;
   }
 }

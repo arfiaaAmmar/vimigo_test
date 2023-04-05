@@ -4,9 +4,7 @@ import 'package:vimigo_test/main.dart';
 
 // ignore: must_be_immutable
 class OnboardingScreen extends StatelessWidget {
-  bool isFirstOpen;
-
-  OnboardingScreen({super.key, required this.isFirstOpen});
+  const OnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +26,7 @@ class OnboardingScreen extends StatelessWidget {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const AttendanceApp(isFirstOpen: false),
+              builder: (context) => const AttendanceScreen(),
             ),
           );
         },
