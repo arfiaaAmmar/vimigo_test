@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'dart:developer' as developer;
 
 void main() => runApp(const AttendanceApp());
@@ -32,7 +33,8 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   List<AttendanceRecord> _attendanceRecords = [];
   List<AttendanceRecord> _filteredRecords = [];
-  String _dateFormat = 'dd/MM/yyyy';
+  DateTime _dateTime = DateTime.now();
+  String _dateFormat = 'dd MMM yyyy, h:mm a';
 
   //Get Attendance Record from given dataset in PDF
   //Dataset was converted to JSON format
@@ -62,12 +64,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     super.dispose();
   }
 
-  void _addRecord(String name) {
+  void _addRecord(String name, DateTime dateTime) {
     setState(() {
       _attendanceRecords.insert(
-          0,
-          AttendanceRecord(
-              user: _nameController.text, checkIn: DateTime.now().toUtc()));
+        0,
+        AttendanceRecord(user: _nameController.text, checkIn: _dateTime),
+      );
       _filteredRecords = _attendanceRecords;
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -85,8 +87,22 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   void _changeDateFormat() {
     setState(() {
-      _dateFormat =
-          _dateFormat == 'dd/MM/yyyy' ? 'dd MMM yyyy, h:mm a' : 'dd/MM/yyyy';
+      _dateFormat = _dateFormat == 'dd MMM yyyy, h:mm a'
+          ? 'time ago'
+          : 'dd MMM yyyy, h:mm a';
+    });
+  }
+
+  void _showDatePicker() {
+    showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025),
+    ).then((value) {
+      setState(() {
+        _dateTime = value!;
+      });
     });
   }
 
@@ -126,10 +142,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               itemBuilder: (context, index) {
                 AttendanceRecord record = _filteredRecords[index];
                 return ListTile(
-                  title: Text(record.user.toString()),
-                  subtitle:
-                      Text(DateFormat(_dateFormat).format(record.checkIn!)),
-                );
+                    title: Text(record.user.toString()),
+                    subtitle: _dateFormat == "time ago"
+                        ? Text(timeago.format(record.checkIn!))
+                        : Text(
+                            DateFormat(_dateFormat).format(record.checkIn!)));
               },
             ),
           ),
@@ -164,6 +181,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   actions: [
                     TextButton(
+                      onPressed: _showDatePicker,
+                      child: const Text('ADD DATE'),
+                    ),
+                    TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                         _nameController.clear();
@@ -172,17 +193,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        _addRecord(_nameController.text);
+                        _addRecord(_nameController.text, _dateTime);
                         Navigator.pop(context);
                         _nameController.clear();
                       },
                       child: const Text('ADD'),
                     ),
-                    showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
-                        lastDate: lastDate)
                   ],
                 ),
               );
